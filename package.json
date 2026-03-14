@@ -2,6 +2,10 @@
   "name": "gua-player",
   "version": "1.0.0",
   "description": "GUA Player - Global shortcut music player",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Z1per-36/--GUA-music-player.git"
+  },
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -37,6 +41,19 @@
       "createDesktopShortcut": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Audio"
     }
   }
 }

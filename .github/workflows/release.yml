@@ -1,0 +1,32 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 當發布「版本標籤」時 (如 v1.0.0) 才會觸發全自動打包
+
+jobs:
+  release:
+    name: Build & Release on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+      - name: 取得原始碼
+        uses: actions/checkout@v4
+
+      - name: 安裝 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安裝必要套件與依賴
+        run: npm install
+
+      - name: 自動建置與發布 (Build and Publish)
+        env:
+          # GitHub Actions 會自動提供一組有權限的 TOKEN 給發布程式
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist -- --publish always
