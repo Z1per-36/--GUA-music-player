@@ -80,3 +80,6 @@
 ## 💖 授權條款
 
 本專案採用 ISC 授權。歡迎自由使用與參與貢獻！
+
+Legal Disclaimer:
+Icons for YouTube and SoundCloud are used for navigational purposes only to indicate content sources. All logos and trademarks are the property of their respective owners. This project is not affiliated with, endorsed, or sponsored by Google/YouTube, Apple, or SoundCloud.
