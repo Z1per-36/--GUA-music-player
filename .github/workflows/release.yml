@@ -9,6 +9,9 @@ jobs:
   release:
     name: Build & Release on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # 給予機器人建立 Release 與寫入檔案的權限
+    permissions:
+      contents: write
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
