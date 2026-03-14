@@ -1,6 +1,6 @@
 {
   "name": "gua-player",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "GUA Player",
   "repository": {
     "type": "git",
@@ -49,13 +49,13 @@
       "target": [
         "dmg"
       ],
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.png"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "icon": "assets/icon.ico",
+      "icon": "assets/icon.png",
       "category": "Audio"
     }
   }
