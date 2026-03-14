@@ -46,9 +46,9 @@ function createWindow() {
     },
     titleBarStyle: 'hidden', // 隱藏預設標題列但保留內容區域
     titleBarOverlay: {       // 啟用 Windows 11 原生控制按鈕 (視窗化/縮小/關閉)
-        color: 'rgba(0,0,0,0)', // 全透明背景，完美透出底下 Mica 材質
-        symbolColor: '#ffffff', 
-        height: 38
+      color: 'rgba(0,0,0,0)', // 全透明背景，完美透出底下 Mica 材質
+      symbolColor: '#ffffff',
+      height: 38
     },
     backgroundMaterial: 'mica', // Windows 11 專屬毛玻璃材質
     autoHideMenuBar: true,
@@ -72,49 +72,49 @@ function createWindow() {
   // 收發 WebContentsView 傳來的播放進度，轉發給 main renderer
   ipcMain.on('media-status', (event, status) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('media-status', status);
+      mainWindow.webContents.send('media-status', status);
     }
   });
 
-  ipcMain.on('seek-media', (event, {platformId, percentage}) => {
-      platformManager.seekMedia(percentage);
+  ipcMain.on('seek-media', (event, { platformId, percentage }) => {
+    platformManager.seekMedia(percentage);
   });
 
   ipcMain.on('trigger-shortcut', (event, action) => {
-      platformManager.sendShortcut(action);
+    platformManager.sendShortcut(action);
   });
-  
+
   ipcMain.on('set-volume', (event, vol) => {
-      platformManager.setVolume(vol);
+    platformManager.setVolume(vol);
   });
 
   ipcMain.on('open-settings', () => {
     if (settingsWindow && !settingsWindow.isDestroyed()) {
-        settingsWindow.focus();
-        return;
+      settingsWindow.focus();
+      return;
     }
     settingsWindow = new BrowserWindow({
-        width: 480,
-        height: 520,
-        parent: mainWindow,
-        modal: false,
-        autoHideMenuBar: true,
-        backgroundMaterial: 'mica',
-        titleBarStyle: 'hidden',
-        titleBarOverlay: { color: 'rgba(0,0,0,0)', symbolColor: '#ffffff', height: 38 },
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: false,
-            contextIsolation: true
-        }
+      width: 600,
+      height: 680,
+      parent: mainWindow,
+      modal: false,
+      autoHideMenuBar: true,
+      backgroundMaterial: 'mica',
+      titleBarStyle: 'hidden',
+      titleBarOverlay: { color: 'rgba(0,0,0,0)', symbolColor: '#ffffff', height: 38 },
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: false,
+        contextIsolation: true
+      }
     });
     settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
   });
 
   ipcMain.on('close-settings', () => {
-      if (settingsWindow && !settingsWindow.isDestroyed()) {
-          settingsWindow.close();
-      }
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.close();
+    }
   });
 
   ipcMain.on('switch-platform', (event, platformId) => {
@@ -124,12 +124,12 @@ function createWindow() {
 
   ipcMain.handle('open-file-dialog', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-        title: 'Select Music File',
-        filters: [{ name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac'] }],
-        properties: ['openFile']
+      title: 'Select Music File',
+      filters: [{ name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac'] }],
+      properties: ['openFile']
     });
     if (!canceled && filePaths.length > 0) {
-        return filePaths[0]; // Return the file path to renderer
+      return filePaths[0]; // Return the file path to renderer
     }
     return null;
   });
