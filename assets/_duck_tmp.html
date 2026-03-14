@@ -1,0 +1,19 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*,body{margin:0;padding:0;overflow:hidden;background:transparent;}</style></head><body>
+<canvas id="c" width="430" height="430" style="width:430px;height:430px;display:block;"></canvas>
+<script>
+var img = new Image();
+img.onload = function() {
+    var c = document.getElementById('c');
+    var ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    var d = ctx.getImageData(0, 0, c.width, c.height);
+    for (var i = 0; i < d.data.length; i += 4) {
+        var br = (d.data[i] + d.data[i+1] + d.data[i+2]) / 3;
+        if (br > 180) { d.data[i+3] = 0; }
+        else { d.data[i] = 180; d.data[i+1] = 180; d.data[i+2] = 180; }
+    }
+    ctx.putImageData(d, 0, 0);
+    window.__done__ = true;
+};
+img.src = 'file:///D:/聽音樂/assets/duck_original.png';
+</script></body></html>

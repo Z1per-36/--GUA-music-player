@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>全域快捷鍵設定</title>
+    <style>
+        html, body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            background-color: transparent;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #titlebar {
+            height: 38px; width: calc(100% - 140px); position: absolute; top: 0; left: 0;
+            -webkit-app-region: drag; z-index: 9999;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 40px 30px;
+            box-sizing: border-box;
+            background: rgba(30,30,30, 0.45); /* 透空以支援 Mica */
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+        }
+        h3 { margin-top: 0; margin-bottom: 20px; font-weight: 400; font-size: 1.4em; }
+        
+        .tips { 
+            font-size: 0.85em; color: #aaa; margin-bottom: 25px; 
+            line-height: 1.5; padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .shortcut-input-group { 
+            margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; 
+            background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .shortcut-input-group label { font-size: 1em; color: #ddd; flex: 1}
+        .shortcut-input-group input { 
+            width: 62%; 
+            padding: 8px 12px; 
+            background: rgba(0,0,0,0.2); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: #fff; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-family: 'Segoe UI', monospace;
+            font-size: 0.88em;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .shortcut-input-group input:focus { 
+            border-color: #007acc; outline: none; background: rgba(0, 122, 204, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+        }
+        
+        .bottom-actions { margin-top: auto; display: flex; flex-direction: column; align-items: center; }
+        .action-btn {
+            background-color: #007acc; color: white; border: none; padding: 12px 15px;
+            border-radius: 6px; cursor: pointer; width: 100%; font-size: 1em;
+            transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .action-btn:hover { background-color: #1a8ad6; transform:translateY(-1px); }
+        .action-btn:active { transform:translateY(1px); }
+        
+        #status {
+            opacity: 0; font-size: 0.85em; color: #4CAF50; margin-top: 15px; 
+            transition: opacity 0.3s;
+        }
+        #status.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div id="titlebar"></div>
+    <div class="container">
+        <h3>全域快捷鍵</h3>
+        <div class="tips">滑鼠點擊欄位後，請直接在鍵盤按下組合鍵（例如 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>）。修改後點擊儲存即可生效。</div>
+        
+        <div class="shortcut-input-group">
+            <label>播放 / 暫停</label>
+            <input type="text" id="input-play-pause" readonly>
+        </div>
+        <div class="shortcut-input-group">
+            <label>下一首</label>
+            <input type="text" id="input-next-track" readonly>
+        </div>
+        <div class="shortcut-input-group">
+            <label>上一首</label>
+            <input type="text" id="input-prev-track" readonly>
+        </div>
+        
+        <div class="bottom-actions">
+            <button id="btn-save-shortcuts" class="action-btn">儲存並套用</button>
+            <div id="status">設定已成功儲存！視窗即將關閉...</div>
+        </div>
+    </div>
+    <script>
+        const formatForDisplay = s => s ? s.replace(/CommandOrControl/g, 'Ctrl').replace(/CmdOrCtrl/g, 'Ctrl') : '';
+        const formatForElectron = s => s ? s.replace(/Ctrl/g, 'CmdOrCtrl') : '';
+
+        window.electronAPI.getShortcuts().then(shortcuts => {
+            document.getElementById('input-play-pause').value = formatForDisplay(shortcuts['play-pause']);
+            document.getElementById('input-next-track').value = formatForDisplay(shortcuts['next-track']);
+            document.getElementById('input-prev-track').value = formatForDisplay(shortcuts['prev-track']);
+        });
+
+        function bindShortcutCapture(inputId) {
+            const input = document.getElementById(inputId);
+            input.addEventListener('keydown', (e) => {
+                e.preventDefault();
+                let keys = [];
+                if (e.ctrlKey || e.metaKey) keys.push('Ctrl');
+                if (e.altKey) keys.push('Alt');
+                if (e.shiftKey) keys.push('Shift');
+                
+                const ignoreKeys = ['Control', 'Alt', 'Shift', 'Meta'];
+                if (!ignoreKeys.includes(e.key)) {
+                    let keyName = e.key;
+                    if (keyName === ' ') keyName = 'Space';
+                    if (keyName === 'ArrowRight') keyName = 'Right';
+                    if (keyName === 'ArrowLeft') keyName = 'Left';
+                    if (keyName === 'ArrowUp') keyName = 'Up';
+                    if (keyName === 'ArrowDown') keyName = 'Down';
+                    if (keyName.length === 1) keyName = keyName.toUpperCase();
+                    keys.push(keyName);
+                }
+                
+                if (keys.length > 0) {
+                    input.value = keys.join('+');
+                }
+            });
+        }
+
+        bindShortcutCapture('input-play-pause');
+        bindShortcutCapture('input-next-track');
+        bindShortcutCapture('input-prev-track');
+
+        document.getElementById('btn-save-shortcuts').addEventListener('click', () => {
+            const shortcuts = {
+                'play-pause': formatForElectron(document.getElementById('input-play-pause').value),
+                'next-track': formatForElectron(document.getElementById('input-next-track').value),
+                'prev-track': formatForElectron(document.getElementById('input-prev-track').value)
+            };
+            window.electronAPI.updateShortcuts(shortcuts);
+            
+            const btn = document.getElementById('btn-save-shortcuts');
+            const status = document.getElementById('status');
+            btn.disabled = true;
+            status.classList.add('show');
+            
+            setTimeout(() => {
+                window.electronAPI.closeSettings();
+            }, 800);
+        });
+    </script>
+</body>
+</html>
