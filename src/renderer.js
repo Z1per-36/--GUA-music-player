@@ -209,3 +209,45 @@ document.getElementById('btn-open-file').addEventListener('click', async () => {
 btnSettings.addEventListener('click', () => {
     window.electronAPI.openSettings();
 });
+
+// ---- 多國語言 (i18n) 處理 ----
+const i18nMain = {
+    zh_TW: {
+        btnOpenFile: "選擇音樂檔案",
+        localFilename: "尚未選擇檔案",
+        volumeControl: "音量控制",
+        localFiles: "本機檔案",
+        settingsTooltip: "全域快捷鍵設定"
+    },
+    en_US: {
+        btnOpenFile: "Select Music File",
+        localFilename: "No file selected",
+        volumeControl: "Volume Control",
+        localFiles: "Local Files",
+        settingsTooltip: "Global Shortcut Settings"
+    }
+}
+
+function updateMainTexts(lang) {
+    const d = i18nMain[lang];
+    if (!d) return;
+    
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (d[key]) {
+            if (el.id === 'local-filename' && el.innerText !== i18nMain.zh_TW.localFilename && el.innerText !== i18nMain.en_US.localFilename) {
+                // 如果已經選擇了真實檔案名稱，則不覆寫
+            } else {
+                el.innerText = d[key];
+            }
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (d[key]) el.title = d[key];
+    });
+}
+
+window.electronAPI.getLanguage().then(lang => updateMainTexts(lang));
+window.electronAPI.onLanguageChanged(lang => updateMainTexts(lang));

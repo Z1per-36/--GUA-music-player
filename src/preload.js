@@ -14,5 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   seekMedia: (platformId, percentage) => ipcRenderer.send('seek-media', {platformId, percentage}),
   triggerShortcut: (action) => ipcRenderer.send('trigger-shortcut', action),
   setVolume: (vol) => ipcRenderer.send('set-volume', vol),
-  closeSettings: () => ipcRenderer.send('close-settings')
+  closeSettings: () => ipcRenderer.send('close-settings'),
+  getLanguage: () => ipcRenderer.invoke('get-language'),
+  setLanguage: (lang) => ipcRenderer.send('set-language', lang),
+  onLanguageChanged: (callback) => ipcRenderer.on('language-changed', (_event, lang) => callback(lang))
 });

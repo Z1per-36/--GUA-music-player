@@ -81,36 +81,87 @@
 <body>
     <div id="titlebar"></div>
     <div class="container">
-        <h3>全域快捷鍵</h3>
-        <div class="tips">滑鼠點擊欄位後，請直接在鍵盤按下組合鍵（例如 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>）。修改後點擊儲存即可生效。</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 data-i18n="header">全域快捷鍵</h3>
+            <select id="lang-selector" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 4px;">
+                <option value="zh_TW">繁體中文</option>
+                <option value="en_US">English</option>
+            </select>
+        </div>
+        <div class="tips" data-i18n="tips">滑鼠點擊欄位後，請直接在鍵盤按下組合鍵（例如 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>）。修改後點擊儲存即可生效。</div>
         
         <div class="shortcut-input-group">
-            <label>播放 / 暫停</label>
+            <label data-i18n="lblPlay">播放 / 暫停</label>
             <input type="text" id="input-play-pause" readonly>
         </div>
         <div class="shortcut-input-group">
-            <label>下一首</label>
+            <label data-i18n="lblNext">下一首</label>
             <input type="text" id="input-next-track" readonly>
         </div>
         <div class="shortcut-input-group">
-            <label>上一首</label>
+            <label data-i18n="lblPrev">上一首</label>
             <input type="text" id="input-prev-track" readonly>
         </div>
         <div class="shortcut-input-group">
-            <label>調高音量</label>
+            <label data-i18n="lblVolUp">調高音量</label>
             <input type="text" id="input-volume-up" readonly>
         </div>
         <div class="shortcut-input-group">
-            <label>降低音量</label>
+            <label data-i18n="lblVolDown">降低音量</label>
             <input type="text" id="input-volume-down" readonly>
         </div>
         
         <div class="bottom-actions">
-            <button id="btn-save-shortcuts" class="action-btn">儲存並套用</button>
-            <div id="status">設定已成功儲存！視窗即將關閉...</div>
+            <button id="btn-save-shortcuts" class="action-btn" data-i18n="btnSave">儲存並套用</button>
+            <div id="status" data-i18n="statusText">設定已成功儲存！視窗即將關閉...</div>
         </div>
     </div>
     <script>
+        const i18nSettings = {
+            zh_TW: {
+                title: "全域快捷鍵設定",
+                header: "全域快捷鍵",
+                tips: "滑鼠點擊欄位後，請直接在鍵盤按下組合鍵（例如 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>）。修改後點擊儲存即可生效。",
+                lblPlay: "播放 / 暫停",
+                lblNext: "下一首",
+                lblPrev: "上一首",
+                lblVolUp: "調高音量",
+                lblVolDown: "降低音量",
+                btnSave: "儲存並套用",
+                statusText: "設定已成功儲存！視窗即將關閉..."
+            },
+            en_US: {
+                title: "Global Shortcut Settings",
+                header: "Global Shortcuts",
+                tips: "Click on the field and press the key combination (e.g., <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>). Click save to apply.",
+                lblPlay: "Play / Pause",
+                lblNext: "Next Track",
+                lblPrev: "Previous Track",
+                lblVolUp: "Volume Up",
+                lblVolDown: "Volume Down",
+                btnSave: "Save and Apply",
+                statusText: "Settings saved successfully! Window will close..."
+            }
+        };
+
+        function updateTexts(lang) {
+            const d = i18nSettings[lang];
+            if (!d) return;
+            document.title = d.title;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (d[key]) el.innerHTML = d[key];
+            });
+            document.getElementById('lang-selector').value = lang;
+        }
+
+        window.electronAPI.getLanguage().then(lang => updateTexts(lang));
+        window.electronAPI.onLanguageChanged(lang => updateTexts(lang));
+        
+        document.getElementById('lang-selector').addEventListener('change', (e) => {
+            window.electronAPI.setLanguage(e.target.value);
+        });
+
         const formatForDisplay = s => s ? s.replace(/CommandOrControl/g, 'Ctrl').replace(/CmdOrCtrl/g, 'Ctrl') : '';
         const formatForElectron = s => s ? s.replace(/Ctrl/g, 'CmdOrCtrl') : '';
 

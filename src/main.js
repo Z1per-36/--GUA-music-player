@@ -8,6 +8,7 @@ app.commandLine.appendSwitch('enable-features', 'Widevine');
 
 let mainWindow;
 let settingsWindow;
+let currentLanguage = 'zh_TW';
 let currentShortcuts = {
   'play-pause': 'CommandOrControl+Shift+Space',
   'next-track': 'CommandOrControl+Shift+Right',
@@ -114,6 +115,18 @@ function createWindow() {
   ipcMain.on('close-settings', () => {
     if (settingsWindow && !settingsWindow.isDestroyed()) {
       settingsWindow.close();
+    }
+  });
+
+  ipcMain.handle('get-language', () => currentLanguage);
+  
+  ipcMain.on('set-language', (event, lang) => {
+    currentLanguage = lang;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('language-changed', lang);
+    }
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.webContents.send('language-changed', lang);
     }
   });
 
