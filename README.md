@@ -37,9 +37,11 @@
 ### 全域快捷鍵預設設定
 
 預設包含以下操作，你隨時可到程式右下角的「⚙️ 設定」修改：
-- 播放 / 暫停：`CommandOrControl + Alt + Space`
-- 下一首：`CommandOrControl + Alt + Right`
-- 上一首：`CommandOrControl + Alt + Left`
+- 播放 / 暫停：`CommandOrControl + Shift + Space`
+- 下一首：`CommandOrControl + Shift + Right`
+- 上一首：`CommandOrControl + Shift + Left`
+- 調高音量：`CommandOrControl + Shift + Up`
+- 降低音量：`CommandOrControl + Shift + Down`
 
 ## 🛠 給開發者的編譯指南
 
@@ -72,7 +74,7 @@
 ## ⚙️ 技術架構
 
 - **[Electron](https://www.electronjs.org/)**: 作為跨平台桌面應用的核心引擎。
-- **純生 JavaScript & CSS**: 堅持不使用肥大的前端框架，追求最輕量、極限的執行效能。
+- **純生 JavaScript & CSS**: 不使用肥大的前端框架，追求最輕量、極限的執行效能。
 - **Electron Builder**: 用於提供一鍵式的跨系統安裝包生成。
 
 ## 💖 授權條款
