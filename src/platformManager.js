@@ -5,10 +5,11 @@ class PlatformManager {
         this.activePlatform = null;
         this.views = {};
         this.mainWindow = null; 
+        this.targetVolume = 1.0; 
         
         this.urls = {
             ytmusic: 'https://music.youtube.com/',
-            spotify: 'https://open.spotify.com/',
+            applemusic: 'https://music.apple.com/',
             soundcloud: 'https://soundcloud.com/'
         };
 
@@ -18,10 +19,10 @@ class PlatformManager {
                 'next-track': "document.querySelector('.next-button')?.click()",
                 'prev-track': "document.querySelector('.previous-button')?.click()"
             },
-            spotify: {
-                'play-pause': "document.querySelector('[data-testid=\"control-button-playpause\"]')?.click()",
-                'next-track': "document.querySelector('[data-testid=\"control-button-skip-forward\"]')?.click()",
-                'prev-track': "document.querySelector('[data-testid=\"control-button-skip-back\"]')?.click()"
+            applemusic: {
+                'play-pause': "try { document.querySelector('button[aria-label=\"Play\"], button[aria-label=\"Pause\"], .web-chrome-playback-controls__play-pause-btn')?.click() || Array.from(document.querySelectorAll('audio, video')).find(e=>e.duration).paused ? Array.from(document.querySelectorAll('audio, video')).find(e=>e.duration).play() : Array.from(document.querySelectorAll('audio, video')).find(e=>e.duration).pause(); } catch(e){}",
+                'next-track': "try { document.querySelector('button[aria-label=\"Next\"], .web-chrome-playback-controls__next-btn')?.click(); } catch(e){}",
+                'prev-track': "try { document.querySelector('button[aria-label=\"Previous\"], .web-chrome-playback-controls__prev-btn')?.click(); } catch(e){}"
             },
             soundcloud: {
                 'play-pause': "document.querySelector('.playControl')?.click()",
@@ -78,13 +79,37 @@ class PlatformManager {
                 webPreferences: {
                     nodeIntegration: false,
                     contextIsolation: true,
-                    backgroundThrottling: true, 
+                    backgroundThrottling: false, // 關閉背景節流以解決 SoundCloud 等音樂網站因被判定在背景而發生卡頓
                 }
             });
             
+            // 使用動態去除 Electron 標籤的方式偽裝，避免寫死 UA 造成 Spotify 發生頁面崩潰錯誤
             const cleanUserAgent = view.webContents.userAgent.replace(/Electron\/\S+\s/g, '');
             view.webContents.userAgent = cleanUserAgent;
             
+            // 允許彈出視窗 (解決 SoundCloud 點擊第三方登入如 Google 時被阻擋的問題)
+            view.webContents.setWindowOpenHandler(() => {
+                return { action: 'allow' };
+            });
+
+            // 僅在 SoundCloud 注入 Hook，避免搞壞 Spotify 的嚴格 React 環境或 DRM
+            if (platformId === 'soundcloud') {
+                view.webContents.on('dom-ready', () => {
+                    view.webContents.executeJavaScript(`
+                        if (!window.__GUA_MEDIAS) {
+                            window.__GUA_MEDIAS = new Set();
+                            if (window.HTMLMediaElement) {
+                                const origPlay = window.HTMLMediaElement.prototype.play;
+                                window.HTMLMediaElement.prototype.play = function() {
+                                    window.__GUA_MEDIAS.add(this);
+                                    return origPlay.apply(this, arguments);
+                                };
+                            }
+                        }
+                    `);
+                });
+            }
+
             view.webContents.loadURL(this.urls[platformId]);
             this.views[platformId] = view;
         }
@@ -112,13 +137,41 @@ class PlatformManager {
              try {
                 const status = await view.webContents.executeJavaScript(`
                     (() => {
-                        let audio = document.querySelector('video') || document.querySelector('audio');
-                        if (!audio) return null;
-                        return {
-                            currentTime: audio.currentTime,
-                            duration: audio.duration,
-                            paused: audio.paused
-                        };
+                        let allMedia = Array.from(document.querySelectorAll('video, audio'));
+                        if (window.__GUA_MEDIAS) window.__GUA_MEDIAS.forEach(m => allMedia.push(m));
+                        
+                        // 暴力強制持續鎖定音量給所有標籤，確保切換或新歌載入時生效
+                        allMedia.forEach(m => {
+                            if (Math.abs(m.volume - ${this.targetVolume}) > 0.01) {
+                                m.volume = ${this.targetVolume};
+                            }
+                        });
+                        
+                        let activeMedia = allMedia.find(el => !el.paused && el.duration > 0) || allMedia[0];
+                        if (activeMedia) {
+                            if (activeMedia.duration) {
+                                return {
+                                    currentTime: activeMedia.currentTime,
+                                    duration: activeMedia.duration,
+                                    paused: activeMedia.paused
+                                };
+                            }
+                        }
+                        
+                        // Fallback: 針對 YouTube Music 特化，使用官方公開 API
+                        const ytPlayer = document.getElementById('movie_player');
+                        if (ytPlayer && ytPlayer.getCurrentTime) {
+                            if (ytPlayer.getVolume && Math.abs(ytPlayer.getVolume() - ${this.targetVolume} * 100) > 1) {
+                                ytPlayer.setVolume(${this.targetVolume} * 100);
+                            }
+                            return {
+                                currentTime: ytPlayer.getCurrentTime(),
+                                duration: ytPlayer.getDuration(),
+                                paused: ytPlayer.getPlayerState() !== 1
+                            };
+                        }
+                        
+                        return null;
                     })();
                 `);
                 
@@ -167,9 +220,16 @@ class PlatformManager {
         if (view && view.webContents && !view.webContents.isDestroyed()) {
              const script = `
                 try {
-                    let audio = document.querySelector('video') || document.querySelector('audio');
-                    if(audio && audio.duration) {
-                        audio.currentTime = audio.duration * (${percentage} / 100);
+                    let allMedia = Array.from(document.querySelectorAll('video, audio'));
+                    if (window.__GUA_MEDIAS) window.__GUA_MEDIAS.forEach(m => allMedia.push(m));
+                    allMedia.forEach(el => {
+                        if(el.duration) el.currentTime = el.duration * (${percentage} / 100);
+                    });
+                    
+                    // YT Music 特化 API
+                    const ytPlayer = document.getElementById('movie_player');
+                    if (ytPlayer && ytPlayer.getDuration) {
+                        ytPlayer.seekTo(ytPlayer.getDuration() * (${percentage} / 100));
                     }
                 } catch(e) {}
              `;
@@ -178,13 +238,19 @@ class PlatformManager {
     }
 
     setVolume(vol) {
+        this.targetVolume = vol;
         if (!this.activePlatform || this.activePlatform === 'local') return;
         const view = this.views[this.activePlatform];
         if (view && view.webContents && !view.webContents.isDestroyed()) {
              const script = `
                 try {
-                    let audio = document.querySelector('video') || document.querySelector('audio');
-                    if(audio) audio.volume = ${vol};
+                    let allMedia = Array.from(document.querySelectorAll('video, audio'));
+                    if (window.__GUA_MEDIAS) window.__GUA_MEDIAS.forEach(m => allMedia.push(m));
+                    allMedia.forEach(el => { el.volume = ${vol}; });
+                    
+                    // YT Music 特化 API 
+                    const ytPlayer = document.getElementById('movie_player');
+                    if (ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(${vol} * 100);
                 } catch(e) {}
              `;
              view.webContents.executeJavaScript(script);

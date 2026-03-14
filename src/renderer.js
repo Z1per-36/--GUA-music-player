@@ -44,11 +44,28 @@ sourceIcons.forEach(btn => {
             iconPause.style.display = 'none';
         }
         window.electronAPI.switchPlatform(currentPlatform);
+        
+        // 切換後立即將目前音量送給後端，後端管理器會主動同步套用到所有元件
+        const currentVol = parseInt(volumeBar.value, 10) / 100;
+        if (currentPlatform !== 'local' && currentPlatform !== 'none') {
+            window.electronAPI.setVolume(currentVol);
+        }
     });
 });
 
 // ---- 控制列圖示動作 ----
 function handleShortcutCall(action) {
+    if (action === 'volume-up') {
+        volumeBar.value = Math.min(100, parseInt(volumeBar.value, 10) + 10);
+        volumeBar.dispatchEvent(new Event('input'));
+        return;
+    }
+    if (action === 'volume-down') {
+        volumeBar.value = Math.max(0, parseInt(volumeBar.value, 10) - 10);
+        volumeBar.dispatchEvent(new Event('input'));
+        return;
+    }
+
     if (currentPlatform === 'local') {
         if (action === 'play-pause') toggleLocalPlay();
         // 對於本機檔案的 next/prev 目前未做播放清單，故忽略
@@ -74,7 +91,7 @@ function toggleLocalPlay() {
     }
 }
 
-window.electronAPI.onLocalShortcut(handleShortcutCall);
+window.electronAPI.onShortcut(handleShortcutCall);
 
 // ---- 接收第三方平台的播放狀態 ----
 window.electronAPI.onMediaStatus((status) => {

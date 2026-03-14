@@ -1,6 +1,6 @@
 {
   "name": "gua-player",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GUA Player",
   "repository": {
     "type": "git",
@@ -40,19 +40,22 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico"
+      "uninstallerIcon": "assets/icon.ico",
+      "displayLanguageSelector": true,
+      "installerLanguages": ["zh_TW", "en_US"],
+      "language": "1028"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.ico"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "icon": "assets/icon.png",
+      "icon": "assets/icon.ico",
       "category": "Audio"
     }
   }

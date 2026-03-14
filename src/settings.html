@@ -96,6 +96,14 @@
             <label>上一首</label>
             <input type="text" id="input-prev-track" readonly>
         </div>
+        <div class="shortcut-input-group">
+            <label>調高音量</label>
+            <input type="text" id="input-volume-up" readonly>
+        </div>
+        <div class="shortcut-input-group">
+            <label>降低音量</label>
+            <input type="text" id="input-volume-down" readonly>
+        </div>
         
         <div class="bottom-actions">
             <button id="btn-save-shortcuts" class="action-btn">儲存並套用</button>
@@ -110,6 +118,11 @@
             document.getElementById('input-play-pause').value = formatForDisplay(shortcuts['play-pause']);
             document.getElementById('input-next-track').value = formatForDisplay(shortcuts['next-track']);
             document.getElementById('input-prev-track').value = formatForDisplay(shortcuts['prev-track']);
+            
+            if (shortcuts['volume-up']) {
+                document.getElementById('input-volume-up').value = formatForDisplay(shortcuts['volume-up']);
+                document.getElementById('input-volume-down').value = formatForDisplay(shortcuts['volume-down']);
+            }
         });
 
         function bindShortcutCapture(inputId) {
@@ -142,12 +155,16 @@
         bindShortcutCapture('input-play-pause');
         bindShortcutCapture('input-next-track');
         bindShortcutCapture('input-prev-track');
+        bindShortcutCapture('input-volume-up');
+        bindShortcutCapture('input-volume-down');
 
         document.getElementById('btn-save-shortcuts').addEventListener('click', () => {
             const shortcuts = {
                 'play-pause': formatForElectron(document.getElementById('input-play-pause').value),
                 'next-track': formatForElectron(document.getElementById('input-next-track').value),
-                'prev-track': formatForElectron(document.getElementById('input-prev-track').value)
+                'prev-track': formatForElectron(document.getElementById('input-prev-track').value),
+                'volume-up': formatForElectron(document.getElementById('input-volume-up').value),
+                'volume-down': formatForElectron(document.getElementById('input-volume-down').value)
             };
             window.electronAPI.updateShortcuts(shortcuts);
             

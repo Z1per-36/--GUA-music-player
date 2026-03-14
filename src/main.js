@@ -2,15 +2,18 @@ const { app, BrowserWindow, globalShortcut, ipcMain, dialog } = require('electro
 const path = require('path');
 const platformManager = require('./platformManager');
 
-// 啟用降低記憶體佔用的命令列開關
+// 啟用降低記憶體佔用與強制開啟 DRM (解決 Spotify 播放)
 app.commandLine.appendSwitch('disable-site-isolation-trials');
+app.commandLine.appendSwitch('enable-features', 'Widevine');
 
 let mainWindow;
 let settingsWindow;
 let currentShortcuts = {
   'play-pause': 'CommandOrControl+Shift+Space',
   'next-track': 'CommandOrControl+Shift+Right',
-  'prev-track': 'CommandOrControl+Shift+Left'
+  'prev-track': 'CommandOrControl+Shift+Left',
+  'volume-up': 'CommandOrControl+Shift+Up',
+  'volume-down': 'CommandOrControl+Shift+Down'
 };
 
 function registerShortcuts() {
@@ -35,7 +38,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
-    icon: path.join(__dirname, '../assets/icon.png'),
+    icon: path.join(__dirname, '../assets/icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
